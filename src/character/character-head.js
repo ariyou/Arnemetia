@@ -3,16 +3,11 @@ export function createCharacterHead(THREE, options = {}) {
   const head = new THREE.Group();
   const mat = (color, roughness = .62, metalness = 0) =>
     new THREE.MeshStandardMaterial({ color, roughness, metalness });
-  const skin = mat(skinColor);
-  const hair = mat(hairColor, .42);
-  const hairDark = mat(0x193875, .5);
-  const hairLight = mat(0x477bd0, .38);
-  const sclera = mat(0xfff8f2, .3);
-  const iris = mat(eyeColor, .24);
-  const pupil = mat(0x10182d, .2);
-  const highlight = mat(0xffffff, .18);
-  const brow = mat(0x18346e, .5);
-  const blush = mat(0xe99b91, .7);
+  const skin = mat(skinColor), hair = mat(hairColor, .42);
+  const hairDark = mat(0x193875, .5), hairLight = mat(0x5689dc, .4);
+  const sclera = mat(0xfff8f2, .3), iris = mat(eyeColor, .24);
+  const pupil = mat(0x10182d, .2), highlight = mat(0xffffff, .18);
+  const brow = mat(0x18346e, .5), blush = mat(0xe99b91, .7);
   const mouthMat = mat(0x99565c, .7);
 
   const add = (geometry, material, p, scale = null) => {
@@ -27,101 +22,88 @@ export function createCharacterHead(THREE, options = {}) {
   const ball = (material, p, scale) =>
     add(new THREE.SphereGeometry(1, 32, 24), material, p, scale);
 
-  // Neck and soft, slightly tapered anime face.
-  add(new THREE.CylinderGeometry(.105, .12, .22, 20), skin, [0, 1.285, 0]);
+  // Smooth tapered tube following a 3D curve; used for sculpted hair strands.
+  const lock = (points, radius, material, taper = .08) => {
+    const curve = new THREE.CatmullRomCurve3(points.map(p => new THREE.Vector3(...p)));
+    const segments = 20, sides = 10;
+    const frames = curve.computeFrenetFrames(segments, false);
+    const vertices = [], indices = [], uvs = [];
+    for (let i = 0; i <= segments; i++) {
+      const t = i / segments;
+      const center = curve.getPointAt(t);
+      const r = radius * (1 - (1 - taper) * Math.pow(t, 1.35));
+      for (let j = 0; j <= sides; j++) {
+        const a = j / sides * Math.PI * 2;
+        const normal = frames.normals[i].clone().multiplyScalar(Math.cos(a))
+          .add(frames.binormals[i].clone().multiplyScalar(Math.sin(a)));
+        const v = center.clone().addScaledVector(normal, r);
+        vertices.push(v.x, v.y, v.z);
+        uvs.push(j / sides, t);
+        if (i < segments && j < sides) {
+          const n = i * (sides + 1) + j;
+          indices.push(n, n + sides + 1, n + 1, n + 1, n + sides + 1, n + sides + 2);
+        }
+      }
+    }
+    const geometry = new THREE.BufferGeometry();
+    geometry.setAttribute('position', new THREE.Float32BufferAttribute(vertices, 3));
+    geometry.setAttribute('uv', new THREE.Float32BufferAttribute(uvs, 2));
+    geometry.setIndex(indices);
+    geometry.computeVertexNormals();
+    return add(geometry, material, [0, 0, 0]);
+  };
+
+  // Neck and face: soft jaw, broad cheeks and compact chin.
+  add(new THREE.CylinderGeometry(.105, .12, .22, 24), skin, [0, 1.285, 0]);
   ball(skin, [0, 1.66, 0], [.385, .435, .335]);
   for (const side of [-1, 1]) {
     ball(skin, [side * .365, 1.625, -.005], [.075, .105, .065]);
-  }
-  // Small nose and subtle mouth, kept intentionally understated.
-  ball(mat(0xe9ad91), [0, 1.555, .331], [.025, .022, .018]);
-  const mouth = add(new THREE.TorusGeometry(.035, .0055, 6, 18, Math.PI), mouthMat, [0, 1.455, .328]);
-  mouth.rotation.z = Math.PI;
-  for (const side of [-1, 1]) {
-    ball(blush, [side * .235, 1.50, .286], [.052, .021, .012]);
+    ball(blush, [side * .225, 1.505, .286], [.047, .018, .009]);
   }
 
-  // Eyes shaped like anime eyes, not protruding spheres.
+  // Large, inset anime eyes with upper eyelid line and layered blue irises.
   for (const side of [-1, 1]) {
     const x = side * .145;
-    ball(sclera, [x, 1.655, .286], [.098, .122, .047]);
-    ball(iris, [x, 1.645, .324], [.065, .087, .025]);
-    ball(pupil, [x, 1.64, .344], [.033, .065, .014]);
-    ball(highlight, [x - .022, 1.681, .359], [.021, .027, .009]);
-    ball(highlight, [x + .023, 1.625, .359], [.010, .013, .007]);
-    const browMesh = add(new THREE.BoxGeometry(.105, .016, .018), brow, [x, 1.80, .292]);
-    browMesh.rotation.z = side * -.12;
+    ball(sclera, [x, 1.655, .286], [.096, .119, .046]);
+    ball(iris, [x, 1.645, .324], [.064, .084, .024]);
+    ball(pupil, [x, 1.64, .344], [.032, .061, .013]);
+    ball(highlight, [x - .021, 1.681, .358], [.021, .026, .009]);
+    ball(highlight, [x + .022, 1.625, .358], [.010, .013, .006]);
+    const upperLid = add(new THREE.TorusGeometry(.086, .009, 6, 24, Math.PI), hairDark, [x, 1.66, .305]);
+    upperLid.rotation.z = Math.PI;
+    const browMesh = add(new THREE.CapsuleGeometry(.009, .085, 3, 8), brow, [x, 1.80, .29]);
+    browMesh.rotation.z = side * -.10;
   }
+  // Tiny nose and restrained smile.
+  ball(mat(0xe8ad91), [0, 1.555, .331], [.018, .019, .014]);
+  const mouth = add(new THREE.TorusGeometry(.032, .005, 6, 18, Math.PI), mouthMat, [0, 1.465, .329]);
+  mouth.rotation.z = Math.PI;
 
-  // Rear hair mass and crown. The cap sits behind the forehead, not over the eyes.
-  ball(hairDark, [0, 1.91, -.085], [.405, .285, .335]);
-  ball(hair, [0, 1.965, -.055], [.392, .245, .335]);
-  // Side layers frame the cheeks and taper into pointed locks.
-  const sideLock = (side, y, z, width, height, angle, material = hair) => {
-    const shape = new THREE.Shape();
-    shape.moveTo(-width * .55, height * .48);
-    shape.quadraticCurveTo(-width * .75, height * .05, -width * .08, -height * .48);
-    shape.quadraticCurveTo(width * .05, -height * .18, width * .55, height * .48);
-    shape.quadraticCurveTo(0, height * .30, -width * .55, height * .48);
-    const geometry = new THREE.ExtrudeGeometry(shape, {
-      depth: .085, bevelEnabled: true, bevelSegments: 3,
-      steps: 1, bevelSize: .025, bevelThickness: .025
-    });
-    const lock = add(geometry, material, [side * .31, y, z]);
-    lock.rotation.z = angle * side;
-    lock.rotation.y = side * -.08;
-    return lock;
-  };
-  sideLock(-1, 1.69, -.015, .28, .48, -.20, hairDark);
-  sideLock(1, 1.69, -.015, .28, .48, -.20, hairDark);
-  sideLock(-1, 1.73, .075, .25, .42, -.25, hair);
-  sideLock(1, 1.73, .075, .25, .42, -.25, hair);
+  // Rear hair cap follows the skull; no hard polygon helmet silhouette.
+  ball(hairDark, [0, 1.91, -.075], [.405, .285, .335]);
+  ball(hair, [0, 1.955, -.045], [.397, .245, .337]);
 
-  // Five broad, overlapping fringe locks swept diagonally across the forehead.
-  const makeFringe = (x, y, z, w, h, lean, material = hair) => {
-    const s = new THREE.Shape();
-    s.moveTo(-w * .52, h * .48);
-    s.bezierCurveTo(-w * .15, h * .62, w * .52, h * .50, w * .48, h * .16);
-    s.bezierCurveTo(w * .38, -h * .05, w * .12, -h * .40, -w * .02, -h * .50);
-    s.bezierCurveTo(-w * .12, -h * .30, -w * .32, h * .02, -w * .52, h * .48);
-    const g = new THREE.ExtrudeGeometry(s, {
-      depth: .105, bevelEnabled: true, bevelSegments: 3,
-      steps: 1, bevelSize: .022, bevelThickness: .022
-    });
-    const lock = add(g, material, [x, y, z]);
-    lock.rotation.z = lean;
-    return lock;
-  };
-  makeFringe(-.245, 1.84, .235, .23, .42, -.48, hairDark);
-  makeFringe(-.13, 1.875, .275, .22, .46, -.25, hair);
-  makeFringe(.005, 1.875, .285, .22, .43, .04, hairLight);
-  makeFringe(.145, 1.85, .27, .23, .45, .28, hair);
-  makeFringe(.27, 1.81, .225, .22, .40, .48, hairDark);
+  // Layered side locks hug the temples, then taper beside the cheeks.
+  lock([[-.31,1.99,-.015],[-.39,1.83,.015],[-.405,1.62,.055],[-.34,1.43,.105]], .105, hairDark, .035);
+  lock([[.31,1.99,-.015],[.39,1.83,.015],[.405,1.62,.055],[.34,1.43,.105]], .105, hairDark, .035);
+  lock([[-.30,1.94,.09],[-.36,1.79,.14],[-.36,1.60,.17],[-.29,1.48,.19]], .085, hair, .025);
+  lock([[.30,1.94,.09],[.36,1.79,.14],[.36,1.60,.17],[.29,1.48,.19]], .085, hair, .025);
 
-  // Distinct swept crown spikes, including the signature curved forelock.
-  const spike = (x, y, z, width, height, angle, material = hair) => {
-    const s = new THREE.Shape();
-    s.moveTo(-width * .55, -height * .30);
-    s.quadraticCurveTo(-width * .25, height * .32, 0, height * .5);
-    s.quadraticCurveTo(width * .12, height * .05, width * .55, -height * .30);
-    s.quadraticCurveTo(0, -height * .08, -width * .55, -height * .30);
-    const g = new THREE.ExtrudeGeometry(s, {
-      depth: .10, bevelEnabled: true, bevelSegments: 3,
-      steps: 1, bevelSize: .02, bevelThickness: .02
-    });
-    const m = add(g, material, [x, y, z]);
-    m.rotation.z = angle;
-  };
-  spike(-.13, 2.04, -.10, .22, .38, -.48, hairLight);
-  spike(.06, 2.07, -.10, .18, .34, .32, hair);
-  spike(.20, 2.015, -.10, .16, .28, .72, hairDark);
+  // Swept fringe: curved solid strands, not flat extruded plates.
+  lock([[-.30,2.00,.16],[-.32,1.91,.25],[-.34,1.78,.29],[-.39,1.68,.27]], .105, hairDark, .025);
+  lock([[-.20,2.06,.20],[-.22,1.94,.29],[-.23,1.80,.335],[-.27,1.65,.32]], .112, hair, .025);
+  lock([[-.07,2.075,.22],[-.08,1.95,.315],[-.10,1.82,.35],[-.12,1.70,.335]], .105, hairLight, .025);
+  lock([[.08,2.065,.21],[.10,1.95,.31],[.12,1.82,.345],[.15,1.69,.325]], .11, hair, .025);
+  lock([[.22,2.015,.16],[.25,1.91,.25],[.29,1.78,.29],[.34,1.68,.26]], .105, hairDark, .025);
 
-  // Subtle painted-looking strand accents on the crown.
-  for (const side of [-1, 1]) {
-    const streak = add(new THREE.TorusGeometry(.16, .008, 5, 28, Math.PI * .72), hairLight,
-      [side * .105, 1.99, .19]);
-    streak.rotation.set(.12, side * .18, side * -.35);
-  }
+  // Distinct swept crown tufts, curved backward then up.
+  lock([[-.12,2.04,-.04],[-.19,2.15,-.12],[-.17,2.27,-.17],[-.07,2.30,-.20]], .075, hairLight, .015);
+  lock([[.02,2.04,-.10],[.12,2.14,-.16],[.23,2.20,-.19],[.30,2.16,-.20]], .07, hair, .015);
+  lock([[.23,1.99,-.10],[.32,2.06,-.15],[.39,2.04,-.18]], .055, hairDark, .01);
+
+  // A few subtle curved highlight strands add volume without clutter.
+  lock([[-.25,2.02,.08],[-.12,2.12,.12],[.02,2.13,.13]], .012, hairLight, .3);
+  lock([[.02,2.12,.13],[.17,2.10,.12],[.27,2.02,.08]], .010, hairLight, .3);
 
   head.userData.mouth = mouth;
   return head;
