@@ -132,22 +132,11 @@ export function initAuthScreen() {
     setBusy(true);
     try {
       if (mode === 'register') {
-        const credential = await registerWithEmail(emailInput.value, passwordInput.value);
-        await createPlayerProfile(credential.user, nicknameInput.value);
-        overlay.remove();
-        window.dispatchEvent(new CustomEvent('arnemetia:profile-ready', {
-          detail: { nickname: nicknameInput.value.trim(), role: 'player' }
-        }));
+        await registerWithEmail(emailInput.value, passwordInput.value);
       } else {
-        const credential = await loginWithEmail(emailInput.value, passwordInput.value);
-        const profile = await getPlayerProfile(credential.user.uid);
-        if (profile) {
-          overlay.remove();
-          window.dispatchEvent(new CustomEvent('arnemetia:profile-ready', { detail: profile }));
-        } else {
-          await showNicknameSetup(credential.user);
-        }
+        await loginWithEmail(emailInput.value, passwordInput.value);
       }
+      // The auth-state listener loads the profile or asks for a nickname.
     } catch (error) {
       const messages = {
         'auth/email-already-in-use': 'Email ini sudah terdaftar. Silakan login.',
@@ -156,8 +145,7 @@ export function initAuthScreen() {
         'auth/weak-password': 'Password minimal 6 karakter.',
         'auth/network-request-failed': 'Koneksi bermasalah. Coba lagi.'
       };
-      showMessage(message, error.message?.includes('Nickname') ? error.message : (messages[error.code] || 'Gagal memproses akun. Coba lagi.'));
-    } finally {
+      showMessage(message, messages[error.code] || error.message || 'Gagal memproses akun. Coba lagi.');
       setBusy(false);
     }
   });
