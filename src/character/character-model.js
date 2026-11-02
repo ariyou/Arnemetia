@@ -49,20 +49,20 @@ export function createCharacterModel(THREE, gender = 'male') {
   // Oversized anime head
   sphere(skin, [0, 1.48, 0], [.39, .43, .34]);
   // Hair cap and side locks
-  sphere(hair, [0, 1.72, -.045], [.405, .28, .37]);
+  sphere(hair, [0, 1.76, -.045], [.405, .25, .37]);
   for (const x of [-.34, .34]) {
-    capsule(hairDark, [x, 1.48, -.12], .105, .42, [0, 0, x > 0 ? -.18 : .18]);
-    sphere(hair, [x * .82, 1.76, .02], [.13, .19, .14]);
+    capsule(hairDark, [x, 1.48, -.18], .075, .38, [0, 0, x > 0 ? -.12 : .12]);
+    sphere(hair, [x * .82, 1.78, .02], [.12, .13, .12]);
   }
   // Fringe pieces across forehead
   for (let i = -2; i <= 2; i++) {
-    const lock = sphere(hair, [i * .115, 1.66 - Math.abs(i) * .025, .27], [.095, .19, .105]);
+    const lock = sphere(hair, [i * .115, 1.76 - Math.abs(i) * .018, .285], [.075, .105, .075]);
     lock.rotation.z = i * -.13;
   }
   if (female) {
     for (const x of [-.3, .3]) {
-      capsule(hair, [x, 1.16, -.13], .12, .62, [0, 0, x > 0 ? -.08 : .08]);
-      sphere(hair, [x, .83, -.13], [.13, .16, .13]);
+      capsule(hair, [x * 1.05, 1.25, -.23], .085, .72, [0, 0, x > 0 ? -.06 : .06]);
+      sphere(hair, [x * 1.05, .86, -.23], [.10, .13, .11]);
     }
     // Hair ribbon
     sphere(gold, [.28, 1.82, -.02], [.09, .055, .07]);
@@ -74,10 +74,10 @@ export function createCharacterModel(THREE, gender = 'male') {
   }
   // Large anime eyes, highlights and mouth
   for (const x of [-.15, .15]) {
-    sphere(white, [x, 1.49, .302], [.09, .115, .045]);
-    sphere(eyes, [x, 1.49, .342], [.055, .082, .025]);
-    sphere(material(0x171b31), [x, 1.49, .363], [.027, .055, .012]);
-    sphere(white, [x - .018, 1.525, .375], [.018, .022, .01]);
+    sphere(white, [x, 1.48, .302], [.105, .13, .045]);
+    sphere(eyes, [x, 1.475, .342], [.072, .10, .026]);
+    sphere(material(0x171b31), [x, 1.47, .365], [.038, .075, .014]);
+    sphere(white, [x - .025, 1.515, .38], [.023, .028, .012]);
   }
   const mouth = add(new THREE.BoxGeometry(.075, .012, .012), material(0x9d5965), [0, 1.34, .337]);
   // Belt, buckle, pouches and gold accents
@@ -88,8 +88,10 @@ export function createCharacterModel(THREE, gender = 'male') {
     sphere(gold, [x, .73, .11], [.045, .05, .025]);
   }
   // Cape behind the body
-  const cape = add(new THREE.ConeGeometry(.39, .78, 5), cloth, [0, .83, -.29]);
+  const cape = add(new THREE.ConeGeometry(.48, .86, 5), cloth, [0, .82, -.32]);
   cape.rotation.x = -.12;
+  const skirt = add(new THREE.CylinderGeometry(.22, female ? .39 : .29, .34, 8), female ? trim : cloth, [0, .53, 0]);
+  skirt.rotation.y = Math.PI / 8;
   const capeEdge = add(new THREE.TorusGeometry(.31, .025, 6, 18, Math.PI), gold, [0, .45, -.29]);
   capeEdge.rotation.x = Math.PI;
   // Weapon and shoulder emblem
