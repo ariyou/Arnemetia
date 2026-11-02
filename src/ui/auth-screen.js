@@ -164,8 +164,34 @@ export function initAuthScreen() {
   watchAuthState(async (user) => {
     currentUser = user;
     if (!user) {
+      // Firebase emits an initial signed-out state before restoring a session.
+      // Do not reload the page here: that can interrupt the auth flow.
       overlay.hidden = false;
       if (!content.querySelector('#auth-form')) {
+        content.innerHTML = `
+          <h1>Welcome, Adventurer</h1>
+          <p class="auth-subtitle">Masuk untuk menyimpan perjalanan karaktermu.</p>
+          <div class="auth-tabs">
+            <button type="button" class="selected" data-mode="login">Login</button>
+            <button type="button" data-mode="register">Daftar</button>
+          </div>
+          <form id="auth-form">
+            <label id="nickname-label" hidden>Nickname karakter
+              <input id="auth-nickname" name="nickname" minlength="4" maxlength="16" pattern="[A-Za-z0-9_]{4,16}" autocomplete="nickname" placeholder="Contoh: Aria" />
+            </label>
+            <label>Email
+              <input id="auth-email" name="email" type="email" autocomplete="email" required placeholder="nama@email.com" />
+            </label>
+            <label>Password
+              <input id="auth-password" name="password" type="password" minlength="6" autocomplete="current-password" required placeholder="Minimal 6 karakter" />
+            </label>
+            <button class="auth-primary" id="auth-submit" type="submit">Login</button>
+          </form>
+          <div class="auth-divider"><span>atau</span></div>
+          <button type="button" class="auth-google" id="auth-google"><b>G</b> Lanjutkan dengan Google</button>
+          <p id="auth-message" class="auth-message" aria-live="polite"></p>
+          <p class="auth-terms">Dengan masuk, kamu menyetujui aturan komunitas Arnemetia.</p>`;
+        // A clean reload is not needed; keep the existing Firebase observer alive.
         window.location.reload();
       }
       return;
