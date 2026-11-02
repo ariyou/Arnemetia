@@ -61,6 +61,7 @@ export function initAuthScreen() {
   const message = overlay.querySelector('#auth-message');
   let mode = 'login';
   let currentUser = null;
+  let currentGender = 'male';
   let busy = false;
 
   function setBusy(value) {
@@ -101,7 +102,7 @@ export function initAuthScreen() {
       </form>
       <p id="nickname-message" class="auth-message" aria-live="polite"></p>
       <button type="button" class="auth-logout" id="auth-logout">Bukan akunmu? Logout</button>`;
-    let selectedGender = 'male';
+    let selectedGender = startingGender || 'male';
     const preview = initCharacterPreview(content.querySelector('#character-preview'), selectedGender);
     content.querySelectorAll('[data-gender]').forEach((button) => button.addEventListener('click', () => {
       selectedGender = button.dataset.gender;
@@ -153,7 +154,7 @@ export function initAuthScreen() {
     });
   }
 
-  async function showGenderSetup(user) {
+  async function showGenderSetup(user, startingGender = currentGender) {
     content.innerHTML = `
       <h1>Pilih karakter</h1>
       <p class="auth-subtitle">Tentukan penampilan awal petualangmu. Pilihan ini bisa diubah nanti.</p>
@@ -181,6 +182,7 @@ export function initAuthScreen() {
         await setPlayerGender(user, selectedGender);
         preview.destroy();
         const profile = await getPlayerProfile(user.uid);
+        currentGender = profile?.gender || selectedGender;
         overlay.remove();
         window.dispatchEvent(new CustomEvent('arnemetia:profile-ready', { detail: profile }));
       } catch (error) {
@@ -226,6 +228,16 @@ export function initAuthScreen() {
     }
   });
 
+  window.addEventListener('arnemetia:open-character-select', async () => {
+    if (!currentUser) {
+      overlay.hidden = false;
+      return;
+    }
+    overlay.hidden = false;
+    document.body.append(overlay);
+    await showGenderSetup(currentUser, currentGender);
+  });
+
   watchAuthState(async (user) => {
     currentUser = user;
     if (user) setBusy(false);
@@ -237,6 +249,7 @@ export function initAuthScreen() {
     try {
       const profile = await getPlayerProfile(user.uid);
       if (profile) {
+        currentGender = profile.gender || 'male';
         if (!profile.gender) {
           await showGenderSetup(user);
           return;
