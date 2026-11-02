@@ -86,7 +86,12 @@ export function createFemaleCharacter(THREE) {
   add(new THREE.BoxGeometry(.09,.55,.075),dark,[0,.12,0],null,rifle);
   add(new THREE.CylinderGeometry(.018,.018,.38,10),silver,[0,.56,0],null,rifle);
   add(new THREE.BoxGeometry(.13,.08,.10),navy2,[0,-.17,0],null,rifle);
-  const weaponPivot=new THREE.Group(); weaponPivot.position.set(.38,.72,.02); root.add(weaponPivot);
+  const weaponPivot=new THREE.Group(); weaponPivot.position.set(.38,1.05,-.18); weaponPivot.rotation.z=-.28; root.add(weaponPivot);
+  // A visible back-mounted rifle assembly; child[0] is scaled by the weapon selector.
+  add(new THREE.BoxGeometry(.095,.72,.09),dark,[0,.12,0],null,weaponPivot);
+  add(new THREE.CylinderGeometry(.018,.018,.42,10),silver,[0,.60,.015],null,weaponPivot);
+  add(new THREE.BoxGeometry(.17,.10,.12),navy2,[0,-.22,0],null,weaponPivot);
+  add(new THREE.BoxGeometry(.13,.045,.11),gold,[0,.22,.055],null,weaponPivot);
   root.userData.weaponPivot=weaponPivot;
   root.userData.gender='female';
   root.userData.animParts={hair:head};
