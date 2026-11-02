@@ -1,8 +1,8 @@
 import { createCharacterHead } from './character-head.js';
-import { createFemaleCharacter } from './character-female.js';
+import { createRabbitCharacter } from './character-rabbit.js';
 
 export function createCharacterModel(THREE, gender = 'male') {
-  if (gender === 'female') return createFemaleCharacter(THREE);
+  if (gender === 'female') return createRabbitCharacter(THREE);
   const root = new THREE.Group();
   const female = false;
   const colors = female
