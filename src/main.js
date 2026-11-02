@@ -2,6 +2,7 @@ import { initAuthScreen } from './ui/auth-screen.js';
 initAuthScreen();
 
 import * as THREE from 'three';
+import { createCharacterModel } from './character/character-model.js';
 
 const canvas = document.querySelector('#world');
 const scene = new THREE.Scene();
@@ -59,34 +60,7 @@ for (let i = 0; i < 22; i++) {
 }
 
 function makeHero(gender = 'male') {
-  const root = new THREE.Group();
-  const skin = mat(0xffd2a3), blue = mat(gender === 'female' ? 0x9b5bb8 : 0x315b9d), dark = mat(0x27334d), hair = mat(gender === 'female' ? 0x6b3d87 : 0x234d9b), gold = mat(0xe8c66d);
-  const body = new THREE.Mesh(new THREE.CapsuleGeometry(.32, .48, 4, 8), blue);
-  body.position.y = .78; body.castShadow = true; root.add(body);
-  const head = new THREE.Mesh(new THREE.SphereGeometry(.34, 12, 10), skin);
-  head.position.y = 1.42; head.castShadow = true; root.add(head);
-  const hairCap = new THREE.Mesh(new THREE.SphereGeometry(.36, 10, 8, 0, Math.PI * 2, 0, Math.PI * .58), hair);
-  hairCap.position.set(0, 1.53, -.035); hairCap.castShadow = true; root.add(hairCap);
-  if (gender === 'female') {
-    const longHair = new THREE.Mesh(new THREE.CapsuleGeometry(.17, .48, 4, 8), hair);
-    longHair.position.set(0, 1.12, -.22); longHair.castShadow = true; root.add(longHair);
-  }
-  for (const x of [-.13, .13]) {
-    const eye = new THREE.Mesh(new THREE.SphereGeometry(.045, 8, 8), dark);
-    eye.position.set(x, 1.43, .3); root.add(eye);
-  }
-  for (const x of [-.19, .19]) {
-    const leg = new THREE.Mesh(new THREE.CapsuleGeometry(.105, .28, 3, 6), dark);
-    leg.position.set(x, .25, 0); root.add(leg);
-  }
-  const arm = new THREE.Mesh(new THREE.CapsuleGeometry(.09, .35, 3, 6), skin);
-  arm.position.set(.36, .86, .08); arm.rotation.z = -.5; root.add(arm);
-  const weaponPivot = new THREE.Group(); weaponPivot.position.set(.42, .92, .12); root.add(weaponPivot);
-  const blade = new THREE.Mesh(new THREE.BoxGeometry(.11, .78, .07), mat(0xd9e5e9, .35));
-  blade.position.y = .48; blade.castShadow = true; weaponPivot.add(blade);
-  const guard = new THREE.Mesh(new THREE.BoxGeometry(.38, .07, .12), gold); guard.position.y = .12; weaponPivot.add(guard);
-  root.userData.weaponPivot = weaponPivot;
-  return root;
+  return createCharacterModel(THREE, gender);
 }
 let hero = makeHero('male'); hero.position.set(0, 0, 3); scene.add(hero);
 window.addEventListener('arnemetia:profile-ready', (event) => {
