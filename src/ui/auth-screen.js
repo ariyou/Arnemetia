@@ -104,6 +104,7 @@ export function initAuthScreen() {
       <button type="button" class="auth-logout" id="auth-logout">Bukan akunmu? Logout</button>`;
     let selectedGender = startingGender || 'male';
     const preview = initCharacterPreview(content.querySelector('#character-preview'), selectedGender);
+    content.querySelectorAll('[data-gender]').forEach((option) => option.classList.toggle('selected', option.dataset.gender === selectedGender));
     content.querySelectorAll('[data-gender]').forEach((button) => button.addEventListener('click', () => {
       selectedGender = button.dataset.gender;
       content.querySelectorAll('[data-gender]').forEach((option) => option.classList.toggle('selected', option === button));
