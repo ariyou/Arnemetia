@@ -107,5 +107,5 @@ export function createCharacterModel(THREE, gender = 'male') {
 
   root.userData.weaponPivot = sword;
   root.userData.gender = gender;
-
-
+  return root;
+}
