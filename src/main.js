@@ -5,6 +5,9 @@ import * as THREE from 'three';
 import { createCharacterModel } from './character/character-model.js';
 
 const canvas = document.querySelector('#world');
+document.querySelector('#character-select-button')?.addEventListener('click', () => {
+  window.dispatchEvent(new CustomEvent('arnemetia:open-character-select'));
+});
 const scene = new THREE.Scene();
 scene.background = new THREE.Color(0x8fc9a1);
 scene.fog = new THREE.Fog(0x8fc9a1, 18, 48);
