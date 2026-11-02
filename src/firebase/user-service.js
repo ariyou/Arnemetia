@@ -17,9 +17,11 @@ export async function getPlayerProfile(uid) {
   return snapshot.exists() ? snapshot.data() : null;
 }
 
-export async function createPlayerProfile(user, nickname) {
+export async function createPlayerProfile(user, nickname, gender) {
   const cleanNickname = nickname.trim();
   const nicknameLower = normalizeNickname(cleanNickname);
+
+  if (!['female', 'male'].includes(gender)) throw new Error('Pilih karakter perempuan atau laki-laki.');
 
   if (!isValidNickname(cleanNickname, 'player')) {
     throw new Error('Nickname harus 4–16 karakter: huruf, angka, atau underscore.');
@@ -49,11 +51,24 @@ export async function createPlayerProfile(user, nickname) {
     transaction.set(userRef, {
       nickname: cleanNickname,
       nicknameLower,
+      gender,
       role: 'player',
       level: 1,
       exp: 0,
       createdAt: serverTimestamp()
     });
+  });
+}
+
+export async function setPlayerGender(user, gender) {
+  if (!['female', 'male'].includes(gender)) {
+    throw new Error('Pilihan karakter tidak valid.');
+  }
+  const userRef = doc(db, 'users', user.uid);
+  await runTransaction(db, async (transaction) => {
+    const snapshot = await transaction.get(userRef);
+    if (!snapshot.exists()) throw new Error('Profil pemain tidak ditemukan.');
+    transaction.update(userRef, { gender });
   });
 }
 
