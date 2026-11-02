@@ -135,7 +135,7 @@ export function initAuthScreen() {
         showMessage(nicknameMessage, 'Nickname berhasil disimpan. Membuka dunia Arnemetia…', false);
         overlay.remove();
         window.dispatchEvent(new CustomEvent('arnemetia:profile-ready', {
-          detail: { nickname, role: 'player' }
+          detail: { nickname, role: 'player', gender: selectedGender }
         }));
       } catch (error) {
         console.error('[Arnemetia] Gagal menyimpan nickname:', error);
