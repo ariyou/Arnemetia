@@ -1,3 +1,6 @@
+import { initAuthScreen } from './ui/auth-screen.js';
+initAuthScreen();
+
 import * as THREE from 'three';
 
 const canvas = document.querySelector('#world');
