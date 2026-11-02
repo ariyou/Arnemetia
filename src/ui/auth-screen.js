@@ -102,7 +102,7 @@ export function initAuthScreen() {
       </form>
       <p id="nickname-message" class="auth-message" aria-live="polite"></p>
       <button type="button" class="auth-logout" id="auth-logout">Bukan akunmu? Logout</button>`;
-    let selectedGender = startingGender || 'male';
+    let selectedGender = 'male';
     const preview = initCharacterPreview(content.querySelector('#character-preview'), selectedGender);
     content.querySelectorAll('[data-gender]').forEach((option) => option.classList.toggle('selected', option.dataset.gender === selectedGender));
     content.querySelectorAll('[data-gender]').forEach((button) => button.addEventListener('click', () => {
@@ -229,7 +229,7 @@ export function initAuthScreen() {
     }
   });
 
-  window.addEventListener('arnemetia:open-character-select', async () => {
+  async function openCharacterSelector() {
     if (!currentUser) {
       overlay.hidden = false;
       return;
@@ -237,6 +237,12 @@ export function initAuthScreen() {
     overlay.hidden = false;
     document.body.append(overlay);
     await showGenderSetup(currentUser, currentGender);
+  }
+  window.addEventListener('arnemetia:open-character-select', openCharacterSelector);
+  document.getElementById('character-select-button')?.addEventListener('click', (event) => {
+    event.preventDefault();
+    event.stopPropagation();
+    openCharacterSelector();
   });
 
   watchAuthState(async (user) => {
