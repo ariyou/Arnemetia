@@ -1,141 +1,115 @@
-// Arnemetia alien sword-user. Entire silhouette is integrated biomechanical
-// anatomy: no cloth, face, ears, tail, or human facial features.
+// Arnemetia: seamless biomechanical alien sword-user.
+// No human face, eyes, mouth, ears, cloth, or tail.
 export function createAlienCharacter(THREE, gender = 'male') {
   const root = new THREE.Group();
-  const mat = (color, roughness = .48, metalness = .28, emissive = 0x000000, intensity = 0) =>
-    new THREE.MeshStandardMaterial({ color, roughness, metalness, emissive, emissiveIntensity: intensity });
-  const core = mat(0x171725, .62, .18);
-  const armor = mat(0xd9d8ed, .32, .55);
-  const armorLight = mat(0xf1efff, .26, .48);
-  const armorShade = mat(0x77758f, .38, .52);
-  const violet = mat(0x9b55ff, .24, .4, 0x8b35ff, 2.1);
-  const slitMat = mat(0xb78cff, .22, .25, 0x9c55ff, 1.25);
-  const bladeMat = mat(0xc9d7f7, .2, .72);
-  const darkBlade = mat(0x29233e, .3, .65);
-
-  const add = (geo, material, p, s = null, parent = root) => {
-    const m = new THREE.Mesh(geo, material);
-    m.position.set(...p);
-    if (s) m.scale.set(...s);
-    m.castShadow = true; m.receiveShadow = true; parent.add(m);
-    return m;
-  };
-  const orb = (material, p, s) => add(new THREE.SphereGeometry(1, 28, 20), material, p, s);
-  const capsule = (material, a, b, radius, radius2 = radius) => {
-    const start = new THREE.Vector3(...a), end = new THREE.Vector3(...b);
-    const delta = new THREE.Vector3().subVectors(end, start);
-    const mesh = add(new THREE.CylinderGeometry(radius2, radius, delta.length(), 12, 1), material,
-      start.clone().add(end).multiplyScalar(.5).toArray());
-    mesh.quaternion.setFromUnitVectors(new THREE.Vector3(0,1,0), delta.normalize());
-    orb(material, a, [radius,radius,radius]);
-    orb(material, b, [radius2,radius2,radius2]);
-    return mesh;
-  };
-  const plate = (points, material, depth = .055, bevel = .025) => {
-    const shape = new THREE.Shape();
-    shape.moveTo(points[0][0], points[0][1]);
-    for (let i=1;i<points.length;i++) shape.lineTo(points[i][0],points[i][1]);
-    shape.closePath();
-    return add(new THREE.ExtrudeGeometry(shape,{depth,bevelEnabled:true,bevelSegments:3,steps:1,bevelSize:bevel,bevelThickness:bevel,curveSegments:8}),material,[0,0,0]);
-  };
-
-  // Core anatomy, with slightly broader male shoulder span but same species silhouette.
-  const shoulder = gender === 'male' ? .43 : .385;
-  orb(core,[0,1.02,0],[.235,.39,.155]);
-  orb(core,[0,.68,0],[.22,.19,.15]);
-  orb(core,[0,1.31,0],[.105,.16,.105]);
-  orb(core,[0,1.42,0],[.205,.235,.19]); // sealed, featureless head shell
-  // Helmet shell: swept crown and cheek guards, no eyes, mouth, ears or face.
-  orb(armor,[0,1.49,-.015],[.205,.20,.19]);
-  const crown = plate([[-.18,1.49],[-.13,1.68],[-.04,1.76],[.035,1.70],[.15,1.66],[.18,1.51],[.10,1.39],[-.10,1.38]],armorLight,.10,.035);
-  crown.position.z=.105;
-  // One short horn on character's left (viewer sees it on the right in front view).
-  const hornCurve = new THREE.CatmullRomCurve3([
-    new THREE.Vector3(-.14,1.59,.02), new THREE.Vector3(-.23,1.67,.015),
-    new THREE.Vector3(-.29,1.72,-.005), new THREE.Vector3(-.30,1.77,-.025)
-  ]);
-  add(new THREE.TubeGeometry(hornCurve,20,.047,10,false),armorLight,[0,0,0]);
-  // Opposite-side subtle sensor seam: a narrow recessed glow, not an eye.
-  const seam = add(new THREE.BoxGeometry(.012,.075,.012),slitMat,[.145,1.48,.174]);
-  seam.rotation.z=-.24;
-  // Neck and torso armor, layered as integrated exoskeleton plates.
-  orb(armor,[0,1.20,.012],[.205,.205,.17]);
-  plate([[-.18,1.31],[-.12,1.43],[0,1.48],[.12,1.43],[.18,1.31],[.10,1.17],[0,1.11],[-.10,1.17]],armorLight,.075,.025).position.z=.145;
-  plate([[-.13,1.23],[-.08,1.08],[0,.98],[.08,1.08],[.13,1.23],[0,1.29]],armorShade,.045,.018).position.z=.19;
-  // Chest energy channels.
-  for (const side of [-1,1]) {
-    const line=add(new THREE.BoxGeometry(.018,.25,.012),violet,[side*.045,1.22,.222]);
-    line.rotation.z=side*-.16;
-    orb(violet,[side*.075,1.36,.20],[.025,.025,.018]);
+  const makeMat = (color, roughness=.42, metalness=.35, emissive=0, intensity=0) =>
+    new THREE.MeshStandardMaterial({color,roughness,metalness,emissive,emissiveIntensity:intensity});
+  const dark=makeMat(0x171522,.58,.2);
+  const shell=makeMat(0xc9c7df,.3,.58);
+  const light=makeMat(0xeeeaff,.26,.5);
+  const shade=makeMat(0x77738e,.38,.5);
+  const glow=makeMat(0x9d55ff,.22,.4,0x8c35ff,2.0);
+  const bladeMat=makeMat(0xd9e4ff,.2,.72);
+  const v=(x,y,z)=>new THREE.Vector3(x,y,z);
+  function mesh(geo,mat,pos,scale,parent=root){
+    const m=new THREE.Mesh(geo,mat);m.position.set(...pos);
+    if(scale)m.scale.set(...scale);m.castShadow=true;m.receiveShadow=true;parent.add(m);return m;
   }
-  orb(violet,[0,1.04,.17],[.025,.075,.012]);
-
-  // Shoulder shells, arms, forearm blades and articulated claw fingers.
-  for (const side of [-1,1]) {
-    orb(core,[side*shoulder,1.29,0],[.16,.17,.15]);
-    orb(armor,[side*shoulder,1.31,.015],[.17,.15,.16]);
-    orb(armorLight,[side*(shoulder+.035),1.34,.105],[.115,.10,.07]);
-    capsule(core,[side*.46,1.25,0],[side*.55,.98,.015],.085,.073);
-    capsule(core,[side*.55,.98,.015],[side*.60,.75,.04],.07,.055);
-    capsule(armor,[side*.60,.91,.04],[side*.65,.73,.07],.09,.065);
-    const fore=plate([[side*.57,.99],[side*.68,.94],[side*.70,.77],[side*.62,.69],[side*.57,.82]],armorLight,.07,.018);
-    fore.position.z=.075;
-    orb(violet,[side*.635,.84,.15],[.018,.065,.012]);
-    orb(core,[side*.65,.68,.045],[.065,.075,.06]);
-    for(let f=0;f<4;f++){
-      const x=side*(.61+(f-1.5)*.035);
-      capsule(armorShade,[x,.67,.07],[x+side*.012,.57,.10],.018,.012);
-    }
-    capsule(armorShade,[side*.60,.68,.09],[side*.53,.61,.12],.022,.012);
+  function ellipsoid(mat,pos,scale){return mesh(new THREE.SphereGeometry(1,32,24),mat,pos,scale);}
+  function link(mat,a,b,r1,r2=r1){
+    const A=v(...a),B=v(...b),d=B.clone().sub(A);
+    const m=mesh(new THREE.CylinderGeometry(r2,r1,d.length(),20,1),mat,A.clone().add(B).multiplyScalar(.5).toArray());
+    m.quaternion.setFromUnitVectors(v(0,1,0),d.normalize());
+    ellipsoid(mat,a,[r1,r1,r1]);ellipsoid(mat,b,[r2,r2,r2]);return m;
+  }
+  function plate(points,mat,z,depth=.045){
+    const s=new THREE.Shape();s.moveTo(points[0][0],points[0][1]);
+    for(let i=1;i<points.length;i++)s.lineTo(points[i][0],points[i][1]);
+    s.closePath();
+    return mesh(new THREE.ExtrudeGeometry(s,{depth,bevelEnabled:true,bevelSegments:4,steps:1,bevelSize:.035,bevelThickness:.025,curveSegments:12}),mat,[0,0,z]);
   }
 
-  // Waist and pelvis are narrow, sculpted armor anatomy rather than clothing.
-  orb(core,[0,.78,0],[.19,.18,.14]);
-  plate([[-.19,.83],[-.13,.94],[0,.98],[.13,.94],[.19,.83],[.11,.69],[0,.65],[-.11,.69]],armor,.07,.025).position.z=.09;
-  orb(armorShade,[0,.73,.12],[.12,.09,.055]);
+  // One continuous dark biomechanical body under close-fitting shell plates.
+  ellipsoid(dark,[0,1.13,0],[.205,.31,.145]);
+  ellipsoid(dark,[0,.83,0],[.19,.22,.135]);
+  ellipsoid(dark,[0,.62,0],[.205,.16,.14]);
+  link(dark,[0,1.27,0],[0,1.43,0],.085,.105);
 
-  // Digitigrade legs: long upper thighs, raised hocks, backward heel and three-toe feet.
+  // Compact sealed helmet, tapered into the neck; absolutely featureless front.
+  ellipsoid(dark,[0,1.51,0],[.17,.205,.155]);
+  ellipsoid(shell,[0,1.53,.005],[.178,.205,.16]);
+  const brow=plate([[-.16,1.55],[-.13,1.68],[-.055,1.73],[.02,1.70],[.14,1.64],[.16,1.52],[.08,1.39],[-.09,1.39]],light,.105,.035);
+  // Single short horn on the character's left. No central crest or second horn.
+  const horn=new THREE.CatmullRomCurve3([v(-.115,1.66,.025),v(-.18,1.70,.015),v(-.205,1.745,-.005)]);
+  mesh(new THREE.TubeGeometry(horn,16,.034,12,false),light,[0,0,0]);
+  // Opposite-side sensor is a dim seam, not an eye or facial feature.
+  const sensor=mesh(new THREE.BoxGeometry(.009,.052,.009),glow,[.145,1.51,.151]);
+  sensor.rotation.z=-.2;
+
+  // Chest and abdomen follow the body's volume; no floating shoulder balls.
+  ellipsoid(shell,[0,1.19,.035],[.205,.205,.15]);
+  plate([[-.17,1.32],[-.12,1.40],[0,1.44],[.12,1.40],[.17,1.32],[.105,1.18],[0,1.10],[-.105,1.18]],light,.135,.035);
+  plate([[-.105,1.15],[-.08,1.01],[0,.96],[.08,1.01],[.105,1.15],[0,1.22]],shade,.145,.025);
   for(const side of [-1,1]){
-    orb(core,[side*.13,.59,0],[.115,.19,.12]);
-    capsule(core,[side*.14,.62,0],[side*.17,.34,-.015],.105,.072);
-    orb(armor,[side*.15,.48,.035],[.115,.18,.12]);
-    const thigh=plate([[side*.06,.66],[side*.20,.69],[side*.25,.53],[side*.19,.40],[side*.10,.43]],armorLight,.055,.02);
-    thigh.position.z=.09;
-    orb(core,[side*.17,.32,-.005],[.075,.085,.08]);
-    capsule(core,[side*.17,.32,-.005],[side*.19,.16,-.10],.062,.045);
-    capsule(armor,[side*.19,.30,.035],[side*.20,.15,-.075],.075,.045);
-    const shin=plate([[side*.12,.34],[side*.23,.37],[side*.25,.22],[side*.20,.12],[side*.15,.18]],armorLight,.055,.018);
-    shin.position.z=.065;
-    // Heel rises; toes point forward (+Z), giving a nimble sword-fighter stance.
-    orb(core,[side*.20,.13,-.09],[.055,.06,.075]);
-    capsule(armorShade,[side*.20,.14,-.08],[side*.20,.09,.12],.045,.055);
-    orb(armor,[side*.20,.085,.14],[.095,.065,.17]);
-    for(let toe=-1;toe<=1;toe++){
-      capsule(armorLight,[side*.20+toe*.045,.075,.19],[side*.20+toe*.055,.045,.29],.035,.018);
+    const channel=mesh(new THREE.BoxGeometry(.012,.20,.009),glow,[side*.045,1.20,.185]);
+    channel.rotation.z=side*-.16;
+  }
+  ellipsoid(glow,[0,1.035,.17],[.018,.045,.009]);
+
+  // Shoulder transitions are tapered into upper arms and covered by curved shells.
+  for(const s of [-1,1]){
+    ellipsoid(dark,[s*.205,1.29,0],[.12,.125,.12]);
+    ellipsoid(shell,[s*.22,1.31,.015],[.125,.12,.125]);
+    ellipsoid(light,[s*.245,1.34,.065],[.105,.085,.09]);
+    link(dark,[s*.27,1.27,0],[s*.36,1.02,.015],.078,.067);
+    link(dark,[s*.36,1.02,.015],[s*.405,.77,.045],.066,.052);
+    link(shell,[s*.37,.99,.04],[s*.415,.77,.07],.073,.055);
+    ellipsoid(light,[s*.415,.86,.085],[.065,.14,.075]);
+    ellipsoid(dark,[s*.41,.70,.045],[.055,.065,.05]);
+    for(let i=0;i<4;i++){
+      const x=s*(.385+(i-1.5)*.027);
+      link(shade,[x,.69,.065],[x+s*.008,.585,.095],.014,.009);
     }
-    orb(violet,[side*.20,.25,.12],[.012,.055,.012]);
+    link(shade,[s*.39,.70,.08],[s*.32,.625,.105],.018,.01);
+    ellipsoid(glow,[s*.415,.86,.153],[.009,.045,.008]);
   }
 
-  // Spine reactor visible from behind; all lighting details are embedded in the body.
-  orb(core,[0,1.18,-.145],[.09,.29,.045]);
-  const spine=add(new THREE.BoxGeometry(.025,.39,.018),violet,[0,1.18,-.19]);
-  spine.rotation.z=.02;
-  for(let y=.95;y<1.39;y+=.11) orb(armorShade,[0,y,-.19],[.075,.035,.025]);
+  // Slim waist and integrated hip shell.
+  ellipsoid(dark,[0,.79,0],[.17,.17,.13]);
+  ellipsoid(shell,[0,.68,.015],[.205,.13,.145]);
+  plate([[-.18,.78],[-.13,.89],[0,.93],[.13,.89],[.18,.78],[.10,.64],[0,.61],[-.10,.64]],light,.11,.03);
 
-  // Sword and grip are attached to a real hand pivot so existing combat code can animate it.
-  const weaponPivot = new THREE.Group();
-  weaponPivot.position.set(.64,.69,.02);
-  weaponPivot.rotation.x=-.10;
-  root.add(weaponPivot);
-  const grip=add(new THREE.CylinderGeometry(.025,.03,.34,10),darkBlade,[0,-.08,0],null,weaponPivot);
-  const guard=add(new THREE.BoxGeometry(.22,.035,.07),armorShade,[0,.10,0],null,weaponPivot);
-  const bladeShape=new THREE.Shape();
-  bladeShape.moveTo(-.045,.12); bladeShape.lineTo(.045,.12);
-  bladeShape.lineTo(.055,.72); bladeShape.lineTo(0,.91); bladeShape.lineTo(-.055,.72); bladeShape.closePath();
-  add(new THREE.ExtrudeGeometry(bladeShape,{depth:.025,bevelEnabled:true,bevelSegments:2,steps:1,bevelSize:.008,bevelThickness:.008}),bladeMat,[0,0,-.012],null,weaponPivot);
-  add(new THREE.BoxGeometry(.012,.64,.012),violet,[0,.47,.018],null,weaponPivot);
+  // Athletic digitigrade legs, with continuous thigh-to-shin flow and three forward claws.
+  for(const s of [-1,1]){
+    link(dark,[s*.105,.65,0],[s*.145,.38,-.005],.095,.068);
+    ellipsoid(shell,[s*.125,.51,.035],[.102,.16,.105]);
+    plate([[s*.045,.65],[s*.16,.68],[s*.22,.52],[s*.17,.39],[s*.09,.43]],light,.105,.025);
+    ellipsoid(dark,[s*.145,.35,-.005],[.068,.075,.07]);
+    link(dark,[s*.145,.34,-.005],[s*.17,.16,-.09],.058,.042);
+    link(shell,[s*.16,.31,.025],[s*.18,.16,-.075],.067,.043);
+    plate([[s*.105,.36],[s*.20,.39],[s*.225,.23],[s*.18,.13],[s*.13,.19]],light,.085,.02);
+    ellipsoid(dark,[s*.18,.13,-.085],[.045,.055,.06]);
+    link(shade,[s*.18,.13,-.07],[s*.18,.085,.12],.04,.05);
+    ellipsoid(shell,[s*.18,.085,.14],[.082,.055,.14]);
+    for(let t=-1;t<=1;t++)link(light,[s*.18+t*.035,.075,.20],[s*.18+t*.043,.045,.275],.027,.012);
+    ellipsoid(glow,[s*.18,.25,.12],[.009,.045,.009]);
+  }
 
-  root.userData.weaponPivot=weaponPivot;
+  // Back reactor/spine: visible only from behind, integrated flush to the shell.
+  ellipsoid(dark,[0,1.17,-.135],[.075,.27,.035]);
+  mesh(new THREE.BoxGeometry(.018,.34,.012),glow,[0,1.17,-.168]);
+  for(let y=.99;y<1.37;y+=.095)ellipsoid(shade,[0,y,-.17],[.055,.025,.016]);
+
+  // Hand-held sword, attached to the established combat pivot.
+  const weapon=new THREE.Group();weapon.position.set(.43,.69,.035);root.add(weapon);
+  mesh(new THREE.CylinderGeometry(.022,.026,.29,12),dark,[0,-.08,0],null,weapon);
+  mesh(new THREE.BoxGeometry(.19,.028,.055),shade,[0,.075,0],null,weapon);
+  const bladeShape=new THREE.Shape();bladeShape.moveTo(-.04,.09);bladeShape.lineTo(.04,.09);
+  bladeShape.lineTo(.05,.66);bladeShape.lineTo(0,.82);bladeShape.lineTo(-.05,.66);bladeShape.closePath();
+  mesh(new THREE.ExtrudeGeometry(bladeShape,{depth:.022,bevelEnabled:true,bevelSegments:3,steps:1,bevelSize:.008,bevelThickness:.008}),bladeMat,[0,0,-.012],null,weapon);
+  mesh(new THREE.BoxGeometry(.009,.56,.009),glow,[0,.39,.015],null,weapon);
+
+  root.userData.weaponPivot=weapon;
   root.userData.gender=gender;
   root.userData.race='arnemetian';
   root.userData.animParts={};
