@@ -136,6 +136,7 @@ export function initAuthScreen() {
       try {
         await createPlayerProfile(user, nickname, selectedGender);
         showMessage(nicknameMessage, 'Nickname berhasil disimpan. Membuka dunia Arnemetia…', false);
+        preview.destroy();
         overlay.remove();
         window.dispatchEvent(new CustomEvent('arnemetia:profile-ready', {
           detail: { nickname, role: 'player', gender: selectedGender }
