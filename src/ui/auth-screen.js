@@ -6,6 +6,7 @@ import {
   watchAuthState
 } from '../firebase/auth-service.js';
 import { createPlayerProfile, getPlayerProfile, setPlayerGender } from '../firebase/user-service.js';
+import { initCharacterPreview } from '../character/character-preview.js';
 
 const escapeText = (value) => String(value).replace(/[&<>"']/g, (char) => ({
   '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
@@ -90,7 +91,7 @@ export function initAuthScreen() {
     content.innerHTML = `
       <h1>Pilih nickname</h1>
       <p class="auth-subtitle">Nama ini akan terlihat oleh pemain lain di dunia Arnemetia.</p>
-      <div class="character-choice"><p class="auth-hint">Pilih karakter</p><div class="character-options"><button type="button" class="character-option selected" data-gender="male"><span class="character-icon">♂</span><b>Cowok</b></button><button type="button" class="character-option" data-gender="female"><span class="character-icon">♀</span><b>Cewek</b></button></div></div>
+      <div class="character-preview" id="character-preview"></div><p class="preview-hint">Geser karakter untuk melihat dari berbagai sisi</p><div class="character-choice"><p class="auth-hint">Pilih karakter</p><div class="character-options"><button type="button" class="character-option selected" data-gender="male"><span class="character-icon">♂</span><b>Cowok</b></button><button type="button" class="character-option" data-gender="female"><span class="character-icon">♀</span><b>Cewek</b></button></div></div>
       <form id="nickname-form" novalidate>
         <label>Nickname karakter
           <input id="nickname-value" name="nickname" minlength="4" maxlength="16" pattern="[A-Za-z0-9_]{4,16}" autocomplete="nickname" required placeholder="Contoh: Aria" />
@@ -101,9 +102,11 @@ export function initAuthScreen() {
       <p id="nickname-message" class="auth-message" aria-live="polite"></p>
       <button type="button" class="auth-logout" id="auth-logout">Bukan akunmu? Logout</button>`;
     let selectedGender = 'male';
+    const preview = initCharacterPreview(content.querySelector('#character-preview'), selectedGender);
     content.querySelectorAll('[data-gender]').forEach((button) => button.addEventListener('click', () => {
       selectedGender = button.dataset.gender;
       content.querySelectorAll('[data-gender]').forEach((option) => option.classList.toggle('selected', option === button));
+      preview.setGender(selectedGender);
     }));
     const nicknameForm = content.querySelector('#nickname-form');
     const nicknameMessage = content.querySelector('#nickname-message');
@@ -153,6 +156,8 @@ export function initAuthScreen() {
     content.innerHTML = `
       <h1>Pilih karakter</h1>
       <p class="auth-subtitle">Tentukan penampilan awal petualangmu. Pilihan ini bisa diubah nanti.</p>
+      <div class="character-preview" id="character-preview"></div>
+      <p class="preview-hint">Geser karakter untuk melihat dari berbagai sisi</p>
       <div class="character-options">
         <button type="button" class="character-option selected" data-gender="male"><span class="character-icon">♂</span><b>Cowok</b></button>
         <button type="button" class="character-option" data-gender="female"><span class="character-icon">♀</span><b>Cewek</b></button>
@@ -160,9 +165,11 @@ export function initAuthScreen() {
       <p id="gender-message" class="auth-message" aria-live="polite"></p>
       <button type="button" class="auth-primary" id="save-gender">Lanjut ke dunia</button>`;
     let selectedGender = 'male';
+    const preview = initCharacterPreview(content.querySelector('#character-preview'), selectedGender);
     content.querySelectorAll('[data-gender]').forEach((button) => button.addEventListener('click', () => {
       selectedGender = button.dataset.gender;
       content.querySelectorAll('[data-gender]').forEach((option) => option.classList.toggle('selected', option === button));
+      preview.setGender(selectedGender);
     }));
     content.querySelector('#save-gender').addEventListener('click', async (event) => {
       const button = event.currentTarget;
@@ -171,6 +178,7 @@ export function initAuthScreen() {
       button.textContent = 'Menyimpan…';
       try {
         await setPlayerGender(user, selectedGender);
+        preview.destroy();
         const profile = await getPlayerProfile(user.uid);
         overlay.remove();
         window.dispatchEvent(new CustomEvent('arnemetia:profile-ready', { detail: profile }));
