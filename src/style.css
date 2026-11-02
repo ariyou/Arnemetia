@@ -14,5 +14,5 @@
 @media(min-width:700px){.hud-left{top:100px;left:22px}.quest-card{top:100px;right:22px}.bottom-hud{left:22px;right:22px;bottom:20px}.weapon-button{width:58px;height:58px}.actions button{height:76px;min-width:82px}.move-hint{bottom:116px}}
 @media(max-width:380px){.identity strong{font-size:16px}.hud-left{top:78px}.quest-card{top:78px}.weapon-picker{padding:7px}.weapon-button{width:40px}.actions button{min-width:57px}.bottom-hud{gap:5px}}
 
-.character-select-button{position:absolute;top:max(58px,calc(env(safe-area-inset-top) + 48px));right:16px;z-index:3;border:1px solid #e0c779;border-radius:9px;padding:7px 10px;background:#183b2c;color:#f4e6b3;font:800 9px 'DM Sans',sans-serif;letter-spacing:1px;box-shadow:0 3px 10px #10251d66}
+.character-select-button{position:fixed;top:calc(env(safe-area-inset-top) + 74px);right:14px;z-index:3;border:1px solid #e0c779;border-radius:9px;padding:7px 10px;background:#183b2c;color:#f4e6b3;font:800 9px 'DM Sans',sans-serif;letter-spacing:1px;box-shadow:0 3px 10px #10251d66}
 .character-select-button:active{transform:scale(.96)}
