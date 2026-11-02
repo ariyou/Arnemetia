@@ -76,8 +76,10 @@ export function initCharacterPreview(container, initialGender = 'male') {
 
   function animate() {
     frame = requestAnimationFrame(animate);
-    const time = clock.getElapsedTime();
+    const dt = clock.getDelta();
+    const time = clock.elapsedTime;
     if (character) {
+      character.userData.mixer?.update(dt);
       character.rotation.y = rotation + (dragging ? 0 : Math.sin(time * .35) * .08);
       character.position.y = .02 + Math.sin(time * 2) * .025;
       character.userData.weaponPivot.rotation.z = Math.sin(time * 1.5) * .035;
