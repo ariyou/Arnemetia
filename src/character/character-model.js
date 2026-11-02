@@ -1,3 +1,5 @@
+import { createCharacterHead } from './character-head.js';
+
 export function createCharacterModel(THREE, gender = 'male') {
   const root = new THREE.Group();
   const female = gender === 'female';
@@ -76,44 +78,12 @@ export function createCharacterModel(THREE, gender = 'male') {
   box(leatherDark, [.29, .72, .115], [.15, .16, .025]);
   box(gold, [.29, .82, .13], [.08, .025, .025]);
 
-  // Head and neck.
-  capsule(skin, [0, 1.31, 0], .10, .12);
-  ball(skin, [0, 1.66, 0], [.405, .435, .35]);
-  for (const side of [-1, 1]) ball(skin, [side * .39, 1.63, -.005], [.075, .105, .07]);
-
-  // Blue layered hair, with separated swept bangs that stay above the eyes.
-  ball(hairShade, [0, 1.91, -.075], [.405, .245, .34]);
-  ball(hair, [0, 1.96, -.045], [.395, .22, .34]);
-  for (const side of [-1, 1]) {
-    capsule(hairShade, [side * .345, 1.67, -.13], .065, .28, [0, 0, side * -.10]);
-    const sideLock = add(new THREE.ConeGeometry(.105, .34, 7), hair, [side * .34, 1.77, .08]);
-    sideLock.rotation.z = side * -.18;
-  }
-  const fringe = [
-    [-.29, 1.82, .255, .105, .31, -.48],
-    [-.16, 1.87, .30, .10, .34, -.26],
-    [-.015, 1.88, .315, .095, .31, .04],
-    [.14, 1.85, .30, .10, .34, .27],
-    [.28, 1.80, .255, .105, .31, .48]
-  ];
-  for (const [x, y, z, width, height, angle] of fringe) {
-    const lock = add(new THREE.ConeGeometry(width, height, 7), hair, [x, y, z]);
-    lock.rotation.z = Math.PI + angle;
-  }
-  const tuft = add(new THREE.ConeGeometry(.105, .30, 8), hair, [-.12, 2.12, -.015]);
-  tuft.rotation.z = .48;
-
-  // Anime eyes with iris, pupil and highlights.
-  for (const side of [-1, 1]) {
-    ball(eyeWhite, [side * .15, 1.66, .306], [.105, .13, .052]);
-    ball(iris, [side * .15, 1.65, .35], [.071, .096, .027]);
-    ball(pupil, [side * .15, 1.645, .372], [.036, .067, .015]);
-    ball(eyeWhite, [side * .15 - .023, 1.69, .386], [.022, .027, .01]);
-    const brow = box(hairShade, [side * .15, 1.82, .30], [.105, .018, .02]);
-    brow.rotation.z = side * -.10;
-  }
-  const mouth = add(new THREE.TorusGeometry(.032, .006, 5, 16, Math.PI), mouthMat, [0, 1.49, .345]);
-  mouth.rotation.z = Math.PI;
+  // Detailed standalone anime head module.
+  const characterHead = createCharacterHead(THREE, {
+    hairColor: colors.hair,
+    eyeColor: colors.eye
+  });
+  root.add(characterHead);
 
   // Simple sword carried diagonally on the back.
   const sword = new THREE.Group();
@@ -135,6 +105,6 @@ export function createCharacterModel(THREE, gender = 'male') {
 
   root.userData.weaponPivot = sword;
   root.userData.gender = gender;
-  root.userData.animParts = { cape: capeBack, mouth };
+  root.userData.animParts = { cape: capeBack, mouth: characterHead.userData.mouth };
   return root;
 }
