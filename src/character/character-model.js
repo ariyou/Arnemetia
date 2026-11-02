@@ -1,4 +1,5 @@
 import { createCharacterHead } from './character-head.js';
+import { GLTFLoader } from 'https://cdn.jsdelivr.net/npm/three@0.179.1/examples/jsm/loaders/GLTFLoader.js';
 
 export function createCharacterModel(THREE, gender = 'male') {
   const root = new THREE.Group();
@@ -105,6 +106,37 @@ export function createCharacterModel(THREE, gender = 'male') {
 
   root.userData.weaponPivot = sword;
   root.userData.gender = gender;
+
+  // Female production model: place the downloaded GLB at /assets/characters/female.glb.
+  if (female) {
+    const loader = new GLTFLoader();
+    loader.load('./assets/characters/female.glb', (gltf) => {
+      const model = gltf.scene;
+      const bounds = new THREE.Box3().setFromObject(model);
+      const size = bounds.getSize(new THREE.Vector3());
+      if (!size.y) return;
+      model.scale.setScalar(1.8 / size.y);
+      const scaledBounds = new THREE.Box3().setFromObject(model);
+      const center = scaledBounds.getCenter(new THREE.Vector3());
+      model.position.x -= center.x;
+      model.position.z -= center.z;
+      model.position.y -= scaledBounds.min.y;
+
+      // Keep the weapon pivot used by the existing combat controls.
+      for (const child of [...root.children]) {
+        if (child !== sword) root.remove(child);
+      }
+      root.add(model);
+      if (gltf.animations?.length) {
+        const mixer = new THREE.AnimationMixer(model);
+        mixer.clipAction(gltf.animations[0]).play();
+        root.userData.mixer = mixer;
+      }
+      root.userData.loadedModel = true;
+    }, undefined, (error) => {
+      console.error('[Arnemetia] Gagal memuat model cewek. Pastikan assets/characters/female.glb tersedia.', error);
+    });
+  }
   root.userData.animParts = { cape: capeBack, mouth: characterHead.userData.mouth };
   return root;
 }
