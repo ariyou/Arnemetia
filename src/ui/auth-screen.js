@@ -90,7 +90,7 @@ export function initAuthScreen() {
     content.innerHTML = `
       <h1>Pilih nickname</h1>
       <p class="auth-subtitle">Nama ini akan terlihat oleh pemain lain di dunia Arnemetia.</p>
-      <form id="nickname-form">
+      <form id="nickname-form" novalidate>
         <label>Nickname karakter
           <input id="nickname-value" name="nickname" minlength="4" maxlength="16" pattern="[A-Za-z0-9_]{4,16}" autocomplete="nickname" required placeholder="Contoh: Aria" />
         </label>
@@ -104,20 +104,37 @@ export function initAuthScreen() {
     content.querySelector('#auth-logout').addEventListener('click', async () => { await logout(); window.location.reload(); });
     nicknameForm.addEventListener('submit', async (event) => {
       event.preventDefault();
-      if (busy) return;
-      const nickname = content.querySelector('#nickname-value').value;
+      if (busy) {
+        showMessage(nicknameMessage, 'Permintaan sebelumnya masih diproses. Tunggu sebentar.');
+        return;
+      }
+
+      const nicknameInput = content.querySelector('#nickname-value');
+      const nickname = nicknameInput.value.trim();
       const saveButton = nicknameForm.querySelector('button');
+
+      if (!/^[a-zA-Z0-9_]{4,16}$/.test(nickname)) {
+        showMessage(nicknameMessage, 'Nickname wajib 4–16 karakter, hanya huruf, angka, atau underscore.');
+        nicknameInput.focus();
+        return;
+      }
+
       busy = true;
       saveButton.disabled = true;
       saveButton.textContent = 'Menyimpan…';
+      showMessage(nicknameMessage, 'Menghubungi Firestore dan menyimpan nickname…', false);
+
       try {
         await createPlayerProfile(user, nickname);
+        showMessage(nicknameMessage, 'Nickname berhasil disimpan. Membuka dunia Arnemetia…', false);
         overlay.remove();
         window.dispatchEvent(new CustomEvent('arnemetia:profile-ready', {
-          detail: { nickname: nickname.trim(), role: 'player' }
+          detail: { nickname, role: 'player' }
         }));
       } catch (error) {
-        showMessage(nicknameMessage, error.message || 'Gagal menyimpan nickname.');
+        console.error('[Arnemetia] Gagal menyimpan nickname:', error);
+        const code = error.code ? ' (' + error.code + ')' : '';
+        showMessage(nicknameMessage, (error.message || 'Gagal menyimpan nickname.') + code);
         saveButton.disabled = false;
         saveButton.textContent = 'Simpan nickname';
       } finally {
