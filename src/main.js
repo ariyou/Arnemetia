@@ -58,15 +58,19 @@ for (let i = 0; i < 22; i++) {
   rock.rotation.set(Math.random(), Math.random(), Math.random()); rock.castShadow = true; scene.add(rock);
 }
 
-function makeHero() {
+function makeHero(gender = 'male') {
   const root = new THREE.Group();
-  const skin = mat(0xffd2a3), blue = mat(0x315b9d), dark = mat(0x27334d), hair = mat(0x234d9b), gold = mat(0xe8c66d);
+  const skin = mat(0xffd2a3), blue = mat(gender === 'female' ? 0x9b5bb8 : 0x315b9d), dark = mat(0x27334d), hair = mat(gender === 'female' ? 0x6b3d87 : 0x234d9b), gold = mat(0xe8c66d);
   const body = new THREE.Mesh(new THREE.CapsuleGeometry(.32, .48, 4, 8), blue);
   body.position.y = .78; body.castShadow = true; root.add(body);
   const head = new THREE.Mesh(new THREE.SphereGeometry(.34, 12, 10), skin);
   head.position.y = 1.42; head.castShadow = true; root.add(head);
   const hairCap = new THREE.Mesh(new THREE.SphereGeometry(.36, 10, 8, 0, Math.PI * 2, 0, Math.PI * .58), hair);
   hairCap.position.set(0, 1.53, -.035); hairCap.castShadow = true; root.add(hairCap);
+  if (gender === 'female') {
+    const longHair = new THREE.Mesh(new THREE.CapsuleGeometry(.17, .48, 4, 8), hair);
+    longHair.position.set(0, 1.12, -.22); longHair.castShadow = true; root.add(longHair);
+  }
   for (const x of [-.13, .13]) {
     const eye = new THREE.Mesh(new THREE.SphereGeometry(.045, 8, 8), dark);
     eye.position.set(x, 1.43, .3); root.add(eye);
@@ -84,7 +88,19 @@ function makeHero() {
   root.userData.weaponPivot = weaponPivot;
   return root;
 }
-const hero = makeHero(); hero.position.set(0, 0, 3); scene.add(hero);
+let hero = makeHero('male'); hero.position.set(0, 0, 3); scene.add(hero);
+window.addEventListener('arnemetia:profile-ready', (event) => {
+  const gender = event.detail?.gender;
+  if (!['female', 'male'].includes(gender)) return;
+  const position = hero.position.clone();
+  const rotation = hero.rotation.clone();
+  scene.remove(hero);
+  hero = makeHero(gender);
+  hero.position.copy(position);
+  hero.rotation.copy(rotation);
+  scene.add(hero);
+  toast(gender === 'female' ? 'Karakter cewek dipilih' : 'Karakter cowok dipilih');
+});
 
 function makeSlime(x, z, color = 0x35b9a2) {
   const group = new THREE.Group(); group.position.set(x, 0, z);
