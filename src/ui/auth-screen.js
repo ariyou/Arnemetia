@@ -163,6 +163,7 @@ export function initAuthScreen() {
 
   watchAuthState(async (user) => {
     currentUser = user;
+    if (user) setBusy(false);
     if (!user) {
       // Ignore Firebase's initial signed-out notification; never reload during auth restoration.
       overlay.hidden = false;
