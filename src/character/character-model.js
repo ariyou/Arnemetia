@@ -1,16 +1,18 @@
 export function createCharacterModel(THREE, gender = 'male') {
   const root = new THREE.Group();
   const female = gender === 'female';
-  const palette = female
-    ? { coat: 0x7650a8, light: 0xe9d7ff, hair: 0xb9a0e8, shadowHair: 0x8060b8, eye: 0x8b55d8 }
-    : { coat: 0x254f91, light: 0xeaf3ff, hair: 0x2453a4, shadowHair: 0x172e65, eye: 0x3c8fe8 };
-  const mat = (color, metalness = 0, roughness = .72) =>
-    new THREE.MeshStandardMaterial({ color, metalness, roughness });
-  const skin = mat(0xffd2b2), coat = mat(palette.coat), light = mat(palette.light, .12, .5);
-  const hair = mat(palette.hair, .04, .48), hairShade = mat(palette.shadowHair);
-  const gold = mat(0xf0c66e, .68, .28), leather = mat(0x49364a), bootMat = mat(0x252a43);
-  const eyeWhite = mat(0xfffbf5), iris = mat(palette.eye, .12, .25), pupil = mat(0x11172c);
-  const blush = mat(0xe99b91), mouthMat = mat(0x874b58);
+  const colors = female
+    ? { cape: 0x7650a8, hair: 0xb9a0e8, eye: 0x9a6bdc }
+    : { cape: 0x315da8, hair: 0x2858ad, eye: 0x438fe8 };
+  const mat = (color, roughness = .76, metalness = 0) =>
+    new THREE.MeshStandardMaterial({ color, roughness, metalness });
+  const skin = mat(0xffd1ad), tunic = mat(0xf0eee8), tunicShade = mat(0xd5dce8);
+  const cape = mat(colors.cape), capeDark = mat(female ? 0x503779 : 0x203d76);
+  const hair = mat(colors.hair, .48), hairShade = mat(female ? 0x8060b8 : 0x193875, .55);
+  const leather = mat(0x65452f), leatherDark = mat(0x392d2b);
+  const trousers = mat(0x29334b), boot = mat(0x443b3a), gold = mat(0xd9b568, .38, .48);
+  const eyeWhite = mat(0xfffaf5, .3), iris = mat(colors.eye, .28), pupil = mat(0x10172a, .25);
+  const mouthMat = mat(0x9d5960);
   const add = (geometry, material, p, s = null, parent = root) => {
     const mesh = new THREE.Mesh(geometry, material);
     mesh.position.set(...p);
@@ -19,110 +21,118 @@ export function createCharacterModel(THREE, gender = 'male') {
     return mesh;
   };
   const ball = (material, p, s) => add(new THREE.SphereGeometry(1, 24, 18), material, p, s);
-  const capsule = (material, p, radius, length, rot = [0,0,0]) => {
-    const m = add(new THREE.CapsuleGeometry(radius, length, 6, 12), material, p);
-    m.rotation.set(...rot); return m;
+  const capsule = (material, p, radius, length, rot = [0, 0, 0]) => {
+    const mesh = add(new THREE.CapsuleGeometry(radius, length, 5, 12), material, p);
+    mesh.rotation.set(...rot); return mesh;
   };
-  const taperedLock = (p, radius, length, rot, material = hair) => {
-    const m = add(new THREE.ConeGeometry(radius, length, 8), material, p);
-    m.rotation.set(...rot); return m;
+  const box = (material, p, s, rot = [0, 0, 0]) => {
+    const mesh = add(new THREE.BoxGeometry(...s), material, p);
+    mesh.rotation.set(...rot); return mesh;
   };
 
-  // Boots and fitted trousers
-  for (const x of [-.18, .18]) {
-    capsule(leather, [x, .36, 0], .105, .34);
-    ball(bootMat, [x, .13, .09], [.145, .105, .23]);
-    ball(gold, [x, .23, .19], [.075, .035, .025]);
-  }
-  // Short adventurer jacket, front panels and hem
-  capsule(coat, [0, .83, 0], .285, .42);
-  ball(light, [0, .86, .19], [.205, .25, .105]);
-  const leftPanel = add(new THREE.BoxGeometry(.12, .39, .045), coat, [-.105, .79, .267]);
-  leftPanel.rotation.z = -.12;
-  const rightPanel = add(new THREE.BoxGeometry(.12, .39, .045), coat, [.105, .79, .267]);
-  rightPanel.rotation.z = .12;
-  capsule(gold, [0, .62, .015], .027, .51, [0,0,Math.PI/2]);
-  ball(gold, [0, .65, .285], [.075,.075,.035]);
-  for (const y of [.78,.9,1.02]) ball(gold, [.13,y,.286], [.018,.018,.012]);
-
-  // Neck, scarf and shoulder armor
-  capsule(skin, [0, 1.19, 0], .105, .12);
-  capsule(light, [0, 1.17, .025], .13, .09);
-  const scarfTail = add(new THREE.BoxGeometry(.13,.34,.055), coat, [-.17,.98,.19]);
-  scarfTail.rotation.z = -.24;
-  for (const x of [-.29,.29]) {
-    ball(light, [x,1.08,0], [.17,.13,.17]);
-    ball(gold, [x,1.09,.13], [.105,.09,.075]);
-    capsule(coat, [x*1.12,.86,0], .085,.29,[0,0,x>0?-.28:.28]);
-    ball(leather,[x*1.12,.68,.035],[.095,.09,.1]);
-    ball(skin,[x*1.12,.61,.04],[.085,.085,.085]);
+  // Compact semi-chibi silhouette: short sturdy legs and a large expressive head.
+  for (const x of [-.17, .17]) {
+    capsule(trousers, [x, .43, 0], .105, .48);
+    capsule(boot, [x, .16, .035], .115, .16);
+    ball(boot, [x, .105, .105], [.14, .085, .22]);
+    box(leather, [x, .25, .035], [.24, .055, .22]);
+    box(gold, [x, .25, .15], [.055, .035, .025]);
   }
 
-  // Large soft chibi head
-  ball(skin,[0,1.53,0],[.405,.43,.345]);
-  // Hair silhouette: rounded crown, back layer, sideburns and separated pointed fringe
-  ball(hairShade,[0,1.69,-.105],[.405,.315,.34]);
-  ball(hair,[0,1.76,-.055],[.405,.265,.355]);
-  for (const x of [-.34,.34]) {
-    capsule(hairShade,[x,1.49,-.16],.075,.30,[0,0,x>0?-.12:.12]);
-    taperedLock([x*.88,1.66,.005],.115,.30,[0,0,x>0?-.32:.32],hair);
+  // Simple cream tunic with a modest front opening.
+  capsule(tunic, [0, .91, 0], .285, .48);
+  ball(tunic, [0, .69, .015], [.29, .18, .23]);
+  box(tunicShade, [0, 1.02, .235], [.105, .39, .025]);
+  for (let i = 0; i < 3; i++) {
+    const y = 1.12 - i * .095;
+    box(leatherDark, [0, y, .255], [.12, .018, .018], [0, 0, .45]);
   }
-  // Distinct swept bangs, ending above the eyes instead of covering them
-  const bangs = [
-    [-.27,1.70,.245,.13,.30,-.24],
-    [-.14,1.75,.285,.12,.28,-.10],
-    [0,1.76,.30,.115,.27,.08],
-    [.14,1.73,.285,.12,.29,.23],
-    [.27,1.68,.24,.13,.27,.34]
+
+  // Short sleeves, bare forearms and simple dark wrist guards.
+  for (const side of [-1, 1]) {
+    capsule(tunic, [side * .32, .96, 0], .12, .25, [0, 0, side * -.28]);
+    capsule(skin, [side * .39, .70, .035], .085, .22, [0, 0, side * -.12]);
+    capsule(leatherDark, [side * .405, .57, .04], .09, .09);
+    ball(skin, [side * .41, .49, .055], [.09, .09, .085]);
+  }
+
+  // Blue shoulder capelet and short back cape.
+  const capelet = add(new THREE.CylinderGeometry(.30, .43, .31, 8, 1, true), cape, [0, 1.20, -.015]);
+  capelet.rotation.y = Math.PI / 8;
+  const capeBack = add(new THREE.ConeGeometry(.34, .54, 5), capeDark, [0, .91, -.20]);
+  capeBack.rotation.x = -.12;
+  for (const side of [-1, 1]) {
+    const edge = box(gold, [side * .23, 1.15, .015], [.34, .035, .31]);
+    edge.rotation.z = side * -.10;
+  }
+  ball(gold, [0, 1.18, .255], [.075, .075, .035]);
+
+  // Leather belt, square buckle and one side pouch.
+  capsule(leather, [0, .72, .015], .045, .52, [0, 0, Math.PI / 2]);
+  box(gold, [0, .72, .255], [.13, .12, .035]);
+  box(leather, [0, .72, .277], [.075, .065, .02]);
+  box(leather, [.29, .72, .015], [.18, .22, .18], [0, 0, -.08]);
+  box(leatherDark, [.29, .72, .115], [.15, .16, .025]);
+  box(gold, [.29, .82, .13], [.08, .025, .025]);
+
+  // Head and neck.
+  capsule(skin, [0, 1.31, 0], .10, .12);
+  ball(skin, [0, 1.66, 0], [.405, .435, .35]);
+  for (const side of [-1, 1]) ball(skin, [side * .39, 1.63, -.005], [.075, .105, .07]);
+
+  // Blue layered hair, with separated swept bangs that stay above the eyes.
+  ball(hairShade, [0, 1.91, -.055], [.415, .27, .36]);
+  ball(hair, [0, 1.96, -.015], [.405, .245, .355]);
+  for (const side of [-1, 1]) {
+    capsule(hairShade, [side * .34, 1.70, -.12], .075, .30, [0, 0, side * -.12]);
+    ball(hair, [side * .34, 1.86, .005], [.13, .18, .13]);
+  }
+  const fringe = [
+    [-.27, 1.83, .245, .095, .19, -.34],
+    [-.14, 1.88, .292, .085, .18, -.18],
+    [0, 1.89, .31, .085, .17, .04],
+    [.14, 1.87, .292, .09, .18, .20],
+    [.27, 1.82, .245, .10, .20, .36]
   ];
-  for (const [x,y,z,r,h,angle] of bangs) {
-    taperedLock([x,y,z],r,h,[0,0,Math.PI+angle],hair);
+  for (const [x, y, z, width, height, angle] of fringe) {
+    const lock = add(new THREE.ConeGeometry(width, height, 7), hair, [x, y, z]);
+    lock.rotation.z = Math.PI + angle;
   }
-  // Two small swept crown tufts
-  taperedLock([-.11,1.98,-.015],.105,.29,[0,0,.55],hair);
-  taperedLock([.08,1.99,-.02],.09,.25,[0,0,.25],hairShade);
+  const tuft = add(new THREE.ConeGeometry(.105, .30, 8), hair, [-.12, 2.12, -.015]);
+  tuft.rotation.z = .48;
 
-  // Anime eyes: white sclera, colored iris, dark pupil and two catchlights
-  for (const x of [-.155,.155]) {
-    ball(eyeWhite,[x,1.535,.306],[.112,.132,.052]);
-    ball(iris,[x,1.525,.35],[.073,.095,.028]);
-    ball(pupil,[x,1.52,.372],[.038,.067,.016]);
-    ball(eyeWhite,[x-.025,1.565,.386],[.023,.029,.012]);
-    ball(eyeWhite,[x+.027,1.49,.385],[.012,.014,.008]);
-    const brow = add(new THREE.BoxGeometry(.105,.018,.025),hairShade,[x,1.685,.31]);
-    brow.rotation.z = x<0?.12:-.12;
+  // Anime eyes with iris, pupil and highlights.
+  for (const side of [-1, 1]) {
+    ball(eyeWhite, [side * .15, 1.66, .306], [.105, .13, .052]);
+    ball(iris, [side * .15, 1.65, .35], [.071, .096, .027]);
+    ball(pupil, [side * .15, 1.645, .372], [.036, .067, .015]);
+    ball(eyeWhite, [side * .15 - .023, 1.69, .386], [.022, .027, .01]);
+    const brow = box(hairShade, [side * .15, 1.82, .30], [.105, .018, .02]);
+    brow.rotation.z = side * -.10;
   }
-  for (const x of [-.245,.245]) ball(blush,[x,1.405,.285],[.052,.022,.012]);
-  const mouth = add(new THREE.TorusGeometry(.035,.006,5,16,Math.PI),mouthMat,[0,1.36,.339]);
+  const mouth = add(new THREE.TorusGeometry(.032, .006, 5, 16, Math.PI), mouthMat, [0, 1.49, .345]);
   mouth.rotation.z = Math.PI;
-  // Back cape with gold clasp and split tails
-  const cape = add(new THREE.ConeGeometry(.43,.78,5),coat,[0,.83,-.29]);
-  cape.rotation.x = -.16;
-  ball(gold,[0,1.12,-.05],[.075,.075,.045]);
-  for (const x of [-.19,.19]) {
-    const tail = add(new THREE.BoxGeometry(.19,.42,.045),coat,[x,.43,-.23]);
-    tail.rotation.z = x<0?-.12:.12;
-    ball(gold,[x,.23,-.20],[.035,.035,.025]);
-  }
-  // Belt pouches and shoulder insignia
-  for (const x of [-.31,.31]) {
-    ball(leather,[x,.69,.06],[.085,.105,.10]);
-    ball(gold,[x,.69,.15],[.045,.05,.025]);
-  }
-  const insignia = add(new THREE.OctahedronGeometry(.075),gold,[-.29,1.08,.19]);
-  insignia.rotation.z = Math.PI/4;
 
-  // Sword held at the right side
-  const weaponPivot = new THREE.Group();
-  weaponPivot.position.set(.43,.79,.12); root.add(weaponPivot);
-  add(new THREE.CylinderGeometry(.025,.032,.22,8),leather,[0,.08,0],null,weaponPivot);
-  add(new THREE.BoxGeometry(.24,.045,.065),gold,[0,.2,0],null,weaponPivot);
-  add(new THREE.BoxGeometry(.075,.49,.035),light,[0,.49,0],null,weaponPivot);
-  add(new THREE.ConeGeometry(.055,.16,4),light,[0,.81,0],null,weaponPivot);
-  ball(gold,[0,.25,.01],[.055,.055,.055]);
+  // Simple sword carried diagonally on the back.
+  const sword = new THREE.Group();
+  sword.position.set(.22, 1.27, -.245);
+  sword.rotation.z = -.34; sword.rotation.x = -.10;
+  root.add(sword);
+  add(new THREE.BoxGeometry(.09, .44, .07), leatherDark, [0, .18, 0], null, sword);
+  add(new THREE.BoxGeometry(.045, .23, .045), leather, [0, -.13, .01], null, sword);
+  add(new THREE.BoxGeometry(.27, .045, .09), gold, [0, .02, .015], null, sword);
+  const bladeShape = new THREE.Shape();
+  bladeShape.moveTo(-.075, 0); bladeShape.lineTo(.075, 0);
+  bladeShape.lineTo(.052, .66); bladeShape.lineTo(0, .82);
+  bladeShape.lineTo(-.052, .66); bladeShape.closePath();
+  const blade = new THREE.ExtrudeGeometry(bladeShape, {
+    depth: .025, bevelEnabled: true, bevelSegments: 1, steps: 1,
+    bevelSize: .008, bevelThickness: .008
+  });
+  add(blade, mat(0xb9d8ee, .25, .55), [0, .39, -.02], null, sword);
 
-  root.userData.weaponPivot = weaponPivot;
+  root.userData.weaponPivot = sword;
   root.userData.gender = gender;
-  root.userData.animParts = { cape, mouth, scarfTail };
+  root.userData.animParts = { cape: capeBack, mouth };
   return root;
 }
