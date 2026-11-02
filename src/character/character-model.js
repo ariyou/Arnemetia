@@ -40,8 +40,9 @@ export function createCharacterModel(THREE, gender = 'male') {
   }
 
   // Simple cream tunic with a modest front opening.
-  capsule(tunic, [0, .91, 0], .285, .48);
-  ball(tunic, [0, .69, .015], [.29, .18, .23]);
+  add(new THREE.CylinderGeometry(.205, .285, .62, 10, 1), tunic, [0, .88, 0]);
+  ball(tunic, [0, 1.16, 0], [.245, .12, .235]);
+  add(new THREE.CylinderGeometry(.28, .29, .09, 10), tunicShade, [0, .565, 0]);
   box(tunicShade, [0, 1.02, .235], [.105, .39, .025]);
   for (let i = 0; i < 3; i++) {
     const y = 1.12 - i * .095;
@@ -57,15 +58,15 @@ export function createCharacterModel(THREE, gender = 'male') {
   }
 
   // Blue shoulder capelet and short back cape.
-  const capelet = add(new THREE.CylinderGeometry(.30, .43, .31, 8, 1, true), cape, [0, 1.20, -.015]);
-  capelet.rotation.y = Math.PI / 8;
-  const capeBack = add(new THREE.ConeGeometry(.34, .54, 5), capeDark, [0, .91, -.20]);
+  const capeBack = add(new THREE.ConeGeometry(.39, .66, 5), cape, [0, .88, -.25]);
   capeBack.rotation.x = -.12;
   for (const side of [-1, 1]) {
-    const edge = box(gold, [side * .23, 1.15, .015], [.34, .035, .31]);
-    edge.rotation.z = side * -.10;
+    const shoulderCape = add(new THREE.BoxGeometry(.39, .10, .43), cape, [side * .22, 1.18, -.015]);
+    shoulderCape.rotation.z = side * -.13;
+    const goldEdge = add(new THREE.BoxGeometry(.39, .025, .44), gold, [side * .22, 1.125, -.005]);
+    goldEdge.rotation.z = side * -.13;
   }
-  ball(gold, [0, 1.18, .255], [.075, .075, .035]);
+  ball(gold, [0, 1.17, .205], [.065, .065, .035]);
 
   // Leather belt, square buckle and one side pouch.
   capsule(leather, [0, .72, .015], .045, .52, [0, 0, Math.PI / 2]);
@@ -81,18 +82,19 @@ export function createCharacterModel(THREE, gender = 'male') {
   for (const side of [-1, 1]) ball(skin, [side * .39, 1.63, -.005], [.075, .105, .07]);
 
   // Blue layered hair, with separated swept bangs that stay above the eyes.
-  ball(hairShade, [0, 1.91, -.055], [.415, .27, .36]);
-  ball(hair, [0, 1.96, -.015], [.405, .245, .355]);
+  ball(hairShade, [0, 1.91, -.075], [.405, .245, .34]);
+  ball(hair, [0, 1.96, -.045], [.395, .22, .34]);
   for (const side of [-1, 1]) {
-    capsule(hairShade, [side * .34, 1.70, -.12], .075, .30, [0, 0, side * -.12]);
-    ball(hair, [side * .34, 1.86, .005], [.13, .18, .13]);
+    capsule(hairShade, [side * .345, 1.67, -.13], .065, .28, [0, 0, side * -.10]);
+    const sideLock = add(new THREE.ConeGeometry(.105, .34, 7), hair, [side * .34, 1.77, .08]);
+    sideLock.rotation.z = side * -.18;
   }
   const fringe = [
-    [-.27, 1.83, .245, .095, .19, -.34],
-    [-.14, 1.88, .292, .085, .18, -.18],
-    [0, 1.89, .31, .085, .17, .04],
-    [.14, 1.87, .292, .09, .18, .20],
-    [.27, 1.82, .245, .10, .20, .36]
+    [-.29, 1.82, .255, .105, .31, -.48],
+    [-.16, 1.87, .30, .10, .34, -.26],
+    [-.015, 1.88, .315, .095, .31, .04],
+    [.14, 1.85, .30, .10, .34, .27],
+    [.28, 1.80, .255, .105, .31, .48]
   ];
   for (const [x, y, z, width, height, angle] of fringe) {
     const lock = add(new THREE.ConeGeometry(width, height, 7), hair, [x, y, z]);
@@ -115,8 +117,8 @@ export function createCharacterModel(THREE, gender = 'male') {
 
   // Simple sword carried diagonally on the back.
   const sword = new THREE.Group();
-  sword.position.set(.22, 1.27, -.245);
-  sword.rotation.z = -.34; sword.rotation.x = -.10;
+  sword.position.set(.30, 1.25, -.30);
+  sword.rotation.z = -.62; sword.rotation.x = -.08;
   root.add(sword);
   add(new THREE.BoxGeometry(.09, .44, .07), leatherDark, [0, .18, 0], null, sword);
   add(new THREE.BoxGeometry(.045, .23, .045), leather, [0, -.13, .01], null, sword);
