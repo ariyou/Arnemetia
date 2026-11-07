@@ -196,7 +196,7 @@ function animate() {
   }
   if (attackAnim > 0) { attackAnim -= dt; hero.userData.weaponPivot.rotation.x = -Math.sin((attackAnim / .28) * Math.PI) * 1.5; }
   else hero.userData.weaponPivot.rotation.x = 0;
-  hero.userData.mixer?.update(dt);
+  hero.userData.mixer?.update(dt);\n  hero.userData.animate?.(time, !!moveTarget, attackAnim > 0);
   monsters.forEach(m => { if (m.userData.alive) { m.userData.body.position.y = .37 + Math.sin(time * 3 + m.userData.phase) * .07; m.rotation.y += Math.sin(time + m.userData.phase) * dt * .25; } });
   const desired = new THREE.Vector3(hero.position.x + 7.5, 10, hero.position.z + 10);
   camera.position.lerp(desired, 1 - Math.exp(-4 * dt)); camera.lookAt(hero.position.x, .5, hero.position.z - 1);
