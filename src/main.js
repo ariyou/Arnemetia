@@ -65,7 +65,7 @@ for (let i = 0; i < 22; i++) {
 function makeHero(gender = 'male') {
   return createCharacterModel(THREE, gender);
 }
-let hero = makeHero('male'); hero.position.set(0, 0, 3); scene.add(hero);
+let hero = makeHero('female'); hero.position.set(0, 0, 3); scene.add(hero);
 window.addEventListener('arnemetia:profile-ready', (event) => {
   const gender = event.detail?.gender;
   if (!['female', 'male'].includes(gender)) return;
